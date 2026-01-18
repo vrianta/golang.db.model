@@ -23,11 +23,11 @@ func (f fieldType) string() string {
 	case FieldTypes.Date:
 		return "DATE"
 	case FieldTypes.Time:
-		return "DATETIME"
+		return "TIME"
 	case FieldTypes.Timestamp:
 		return "TIMESTAMP"
 	case FieldTypes.JSON:
-		return "LONGTEXT"
+		return "JSON"
 	case FieldTypes.Enum:
 		return "ENUM" // You can customize enum values at the field level
 	case FieldTypes.Binary:

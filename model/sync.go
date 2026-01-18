@@ -81,30 +81,30 @@ func (m *meta) syncTableSchema() {
 		reasons := []string{} // track what’s different for user prompt
 
 		if !field.Compare(filed_type) { // type mismatch?
-			reasons = append(reasons, fmt.Sprintf("type mismatch(old:%s,new:%s)", filed_type, field.Type.string()))
+			reasons = append(reasons, fmt.Sprintf("type mismatch(old:%s,new:%s)", filed_type, field.t.string()))
 			shouldChange = true
 		}
 		// Length mismatch (0 in model means “unspecified” so treat 1↔0 special).
-		if !(field_length == 1 && field.Length == 0) && field_length != field.Length {
-			reasons = append(reasons, fmt.Sprintf("length mismatch(old:%d:new:%d)", field_length, field.Length))
+		if !(field_length == 1 && field.lenth == 0) && field_length != field.lenth {
+			reasons = append(reasons, fmt.Sprintf("length mismatch(old:%d:new:%d)", field_length, field.lenth))
 			shouldChange = true
 		}
-		if schema.defaultVal.String != field.DefaultValue { // default value mismatch?
+		if schema.defaultVal.String != field.defaultValue { // default value mismatch?
 			// some edge cases
-			if field.Type != FieldTypes.Timestamp {
+			if field.t != FieldTypes.Timestamp {
 				reasons = append(reasons, "default mismatch")
 				shouldChange = true
 			}
 		}
 		// Nullable flag mismatches (DB says YES/NO vs model bool).
-		if schema.nullable == "YES" && !field.Nullable ||
-			schema.nullable == "NO" && field.Nullable {
+		if schema.nullable == "YES" && !field.nullable ||
+			schema.nullable == "NO" && field.nullable {
 			reasons = append(reasons, "nullable mismatch")
 			shouldChange = true
 		}
 		// Auto‑increment mismatch.
 		// log.Info("incriment Settings: %s", schema.extra)
-		if (schema.extra == "auto_increment" && !field.AutoIncrement) || (schema.extra == "" && field.AutoIncrement) {
+		if (schema.extra == "auto_increment" && !field.autoIncrement) || (schema.extra == "" && field.autoIncrement) {
 			reasons = append(reasons, "auto_increment mismatch")
 			shouldChange = true
 		}
@@ -126,7 +126,7 @@ func (m *meta) syncTableSchema() {
 	indexCheck:
 		// ────────────── Index consistency checks ──────────────
 		// UNIQUE
-		if schema.isunique != field.Index.Unique {
+		if schema.isunique != field.index.Unique {
 
 			fmt.Printf("UNIQUE index mismatch on '%s'. Sync? (y/n): ", field.name)
 			input, _ := reader.ReadString('\n')
@@ -138,7 +138,7 @@ func (m *meta) syncTableSchema() {
 		}
 
 		// PRIMARY KEY
-		if schema.isprimary != field.Index.PrimaryKey {
+		if schema.isprimary != field.index.PrimaryKey {
 
 			fmt.Printf("PRIMARY KEY mismatch on '%s'. Sync? (y/n): ", field.name)
 			input, _ := reader.ReadString('\n')
@@ -150,7 +150,7 @@ func (m *meta) syncTableSchema() {
 		}
 
 		// Regular INDEX
-		if schema.isindex != field.Index.Index {
+		if schema.isindex != field.index.Index {
 
 			fmt.Printf("INDEX mismatch on '%s'. Sync? (y/n): ", field.name)
 			input, _ := reader.ReadString('\n')

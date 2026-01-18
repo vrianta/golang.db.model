@@ -3,6 +3,7 @@ package model
 import (
 	"database/sql"
 	"fmt"
+	"maps"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -53,6 +54,85 @@ func init() {
 
 }
 
+/*
+ * This Package is to handle model in the database checking and creating tables and providing default functions to handle them
+ * It will create the table,
+ * It will update the table accordingly during the initial program startup only if the build is not true
+ * So Dynaimic Table Updation will be handled during development only
+ * It will provide the default functions to handle the model like Create, Read, Update, Delete
+ */
+func newModel(tableName string, FieldTypes FieldTypeset, depends_on []string) meta {
+
+	for _, field := range FieldTypes {
+		if field.fk == nil {
+			field.table_name = tableName // Set the table name for each field
+		}
+	}
+
+	_model := meta{
+		components: make(components),
+		TableName:  tableName,
+		FieldTypes: FieldTypes,
+		primary: func(FieldTypes FieldTypeset) *Field {
+			for _, field := range FieldTypes {
+				if field.index.PrimaryKey {
+					return field // Return the pointer directly from the map
+				}
+			}
+			return nil
+		}(FieldTypes),
+		depends_on: depends_on,
+	}
+
+	_model.validate()
+
+	return _model
+}
+
+func New[T any](tableName string, structure T) *Table[T] {
+
+	t := reflect.TypeOf(structure)
+	v := reflect.ValueOf(structure)
+
+	if t.Kind() != reflect.Struct {
+		panic("structure passed to New must be a struct")
+	}
+
+	FieldTypeset := make(FieldTypeset, t.NumField())
+	depends_on := []string{}
+	for i := 0; i < t.NumField(); i++ {
+		structField := t.Field(i)
+		valueField := v.Field(i)
+
+		// Handle pointer to Field
+		fieldPtr, ok := valueField.Interface().(*Field)
+		if !ok {
+			panic(fmt.Sprintf("[Model Error] Field '%s' is not of type *model.Field of Model %s", structField.Name, tableName))
+		}
+		if fieldPtr == nil {
+			panic(fmt.Sprintf("[Validation Error] Field '%s' in Talble %s Body is not Defined", structField.Name, tableName))
+		}
+		// Update metadata
+		fieldPtr.name = structField.Name
+		if fieldPtr.fk == nil {
+			fieldPtr.table_name = tableName
+		}
+
+		FieldTypeset[structField.Name] = fieldPtr
+	}
+
+	response := &Table[T]{
+		meta:   newModel(tableName, FieldTypeset, depends_on),
+		Fields: structure,
+	}
+
+	ModelsRegistry[tableName] = &response.meta
+	return response
+}
+
+/*
+ * Syncing Table Scenma and Components Syncing
+ */
 func (t *Table[T]) syncTable() {
 
 	model__ := &t.meta
@@ -147,82 +227,6 @@ func (t *Table[T]) syncTable() {
 }
 
 /*
- * This Package is to handle model in the database checking and creating tables and providing default functions to handle them
- * It will create the table,
- * It will update the table accordingly during the initial program startup only if the build is not true
- * So Dynaimic Table Updation will be handled during development only
- * It will provide the default functions to handle the model like Create, Read, Update, Delete
- */
-func newModel(tableName string, FieldTypes FieldTypeset, depends_on []string) meta {
-
-	for _, field := range FieldTypes {
-		if field.fk == nil {
-			field.table_name = tableName // Set the table name for each field
-		}
-	}
-
-	_model := meta{
-		components: make(components),
-		TableName:  tableName,
-		FieldTypes: FieldTypes,
-		primary: func(FieldTypes FieldTypeset) *Field {
-			for _, field := range FieldTypes {
-				if field.Index.PrimaryKey {
-					return field // Return the pointer directly from the map
-				}
-			}
-			return nil
-		}(FieldTypes),
-		depends_on: depends_on,
-	}
-
-	_model.validate()
-
-	return _model
-}
-
-func New[T any](tableName string, structure T) *Table[T] {
-
-	t := reflect.TypeOf(structure)
-	v := reflect.ValueOf(structure)
-
-	if t.Kind() != reflect.Struct {
-		panic("structure passed to New must be a struct")
-	}
-
-	FieldTypeset := make(FieldTypeset, t.NumField())
-	depends_on := []string{}
-	for i := 0; i < t.NumField(); i++ {
-		structField := t.Field(i)
-		valueField := v.Field(i)
-
-		// Handle pointer to Field
-		fieldPtr, ok := valueField.Interface().(*Field)
-		if !ok {
-			panic(fmt.Sprintf("[Model Error] Field '%s' is not of type *model.Field of Model %s", structField.Name, tableName))
-		}
-		if fieldPtr == nil {
-			panic(fmt.Sprintf("[Validation Error] Field '%s' in Talble %s Body is not Defined", structField.Name, tableName))
-		}
-		// Update metadata
-		fieldPtr.name = structField.Name
-		if fieldPtr.fk == nil {
-			fieldPtr.table_name = tableName
-		}
-
-		FieldTypeset[structField.Name] = fieldPtr
-	}
-
-	response := &Table[T]{
-		meta:   newModel(tableName, FieldTypeset, depends_on),
-		Fields: structure,
-	}
-
-	ModelsRegistry[tableName] = &response.meta
-	return response
-}
-
-/*
  * Opens Database Connection and have to be called on creation of the model
  */
 func (t *Table[T]) InitialiseDB(driver string, DSN string) *Table[T] {
@@ -275,7 +279,7 @@ func (m *meta) syncPrimaryKey(field *Field, schema *schema) {
 		fmt.Println("Error updating primary key:", err.Error())
 		return
 	}
-	if schema.isprimary && !field.Index.PrimaryKey {
+	if schema.isprimary && !field.index.PrimaryKey {
 		// Drop primary key
 		queryBuilder := fmt.Sprintf("ALTER TABLE `%s` DROP PRIMARY KEY;", m.TableName)
 		if _, err := m.db.Exec(queryBuilder); err != nil {
@@ -284,7 +288,7 @@ func (m *meta) syncPrimaryKey(field *Field, schema *schema) {
 			fmt.Printf("[Index] PRIMARY KEY dropped for field: %s\n", field.name)
 		}
 	}
-	if !schema.isprimary && field.Index.PrimaryKey {
+	if !schema.isprimary && field.index.PrimaryKey {
 		// Add primary key
 		queryBuilder := "ALTER TABLE " + m.TableName + " ADD PRIMARY KEY (" + field.name + ")"
 		if _, err := m.db.Query(queryBuilder); err != nil {
@@ -292,12 +296,6 @@ func (m *meta) syncPrimaryKey(field *Field, schema *schema) {
 			fmt.Println("[FAILED] Failed queryBuilder to Update Primary Key is: ", queryBuilder)
 		}
 	}
-}
-
-func logSection(header string) {
-	fmt.Println("---------------------------------------------------------")
-	fmt.Println(header)
-	fmt.Println("---------------------------------------------------------")
 }
 
 // Handles adding/dropping UNIQUE index
@@ -308,7 +306,7 @@ func (m *meta) syncUniqueIndex(field *Field, schema *schema) {
 		return
 	}
 	indexName := fmt.Sprintf("unq_%s", field.name)
-	if schema.isunique && !field.Index.Unique {
+	if schema.isunique && !field.index.Unique {
 		// Drop unique index
 		queryBuilder := fmt.Sprintf("ALTER TABLE `%s` DROP INDEX `%s`;", m.TableName, indexName)
 		if _, err := m.db.Exec(queryBuilder); err != nil {
@@ -317,7 +315,7 @@ func (m *meta) syncUniqueIndex(field *Field, schema *schema) {
 			fmt.Printf("[Index] UNIQUE dropped for field: %s\n", field.name)
 		}
 	}
-	if !schema.isunique && field.Index.Unique {
+	if !schema.isunique && field.index.Unique {
 		// Add unique index
 		queryBuilder := fmt.Sprintf("ALTER TABLE `%s` ADD UNIQUE `%s` (`%s`);", m.TableName, indexName, field.name)
 		if _, err := m.db.Exec(queryBuilder); err != nil {
@@ -335,7 +333,7 @@ func (m *meta) syncIndex(field *Field, schema *schema) {
 		return
 	}
 	indexName := fmt.Sprintf("idx_%s", field.name)
-	if schema.isindex && !field.Index.Index {
+	if schema.isindex && !field.index.Index {
 		// Drop index
 		queryBuilder := fmt.Sprintf("ALTER TABLE `%s` DROP INDEX `%s`;", m.TableName, indexName)
 		if _, err := m.db.Exec(queryBuilder); err != nil {
@@ -344,7 +342,7 @@ func (m *meta) syncIndex(field *Field, schema *schema) {
 			fmt.Printf("[Index] INDEX dropped for field: %s\n", field.name)
 		}
 	}
-	if !schema.isindex && field.Index.Index {
+	if !schema.isindex && field.index.Index {
 		// Add index
 		queryBuilder := fmt.Sprintf("ALTER TABLE `%s` ADD INDEX `%s` (`%s`);", m.TableName, indexName, field.name)
 		if _, err := m.db.Exec(queryBuilder); err != nil {
@@ -366,26 +364,21 @@ func (m *meta) GetTableName() string {
 // 	response := make(map[string]any, len(m.FieldTypes))
 // 	var wg sync.WaitGroup
 // 	var mu sync.Mutex
-
 // 	for _, field := range m.FieldTypes {
 // 		wg.Add(1)
-
 // 		go func(f *Field) {
 // 			defer wg.Done()
-
 // 			var value any
 // 			if f.value != nil {
 // 				value = f.value
 // 			} else {
 // 				value = nil
 // 			}
-
 // 			mu.Lock()
 // 			response[f.Name] = value
 // 			mu.Unlock()
 // 		}(&field)
 // 	}
-
 // 	wg.Wait()
 // 	return response
 // }
@@ -394,9 +387,7 @@ func (m *meta) GetTableName() string {
 // This is a dedicated Create/InsertRow function that does not overlap with table creation or schema management.
 func (m *meta) InsertRow(values map[string]any) error {
 	q := m.Create()
-	for k, v := range values {
-		q.InsertRowFieldTypes[k] = v
-	}
+	maps.Copy(q.InsertRowFieldTypes, values)
 	return q.Exec()
 }
 
@@ -418,33 +409,13 @@ func (m *meta) HasPrimaryKey() bool {
 		return true
 	}
 	for _, field := range m.FieldTypes {
-		if field.Index.PrimaryKey {
+		if field.index.PrimaryKey {
 			m.primary = field
 			return true // Return the pointer directly from the map
 		}
 	}
 
 	return false
-}
-
-/*
-GetField(fieldname) -> return pointer of the field
-*/
-
-func (m *meta) GetField(field_name string) *Field {
-	field, ok := m.FieldTypes[field_name]
-	if !ok {
-		return nil
-	}
-	return field
-}
-
-/*
-GetField(fieldname) -> return pointer of the field
-*/
-
-func (m *meta) GetFieldTypes() *FieldTypeset {
-	return &m.FieldTypes
 }
 
 // Print the Objects of the models as the good for debug perpose

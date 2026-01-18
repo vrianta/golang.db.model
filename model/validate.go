@@ -38,19 +38,19 @@ func (m *meta) validate() {
 			fieldNames[f.name] = struct{}{}
 			mu.Unlock()
 
-			if f.Type == FieldTypes.Enum && f.Definition == nil {
+			if f.t == FieldTypes.Enum && f.definition == nil {
 				panic(fmt.Sprintf("[Validation Error] Field '%s' in Table '%s' is of type ENUM but has no definition.", f.name, m.TableName))
-			} else if f.Definition != nil && len(f.Definition) == 0 {
+			} else if f.definition != nil && len(f.definition) == 0 {
 				panic(fmt.Sprintf("Field '%s' of type ENUM must have Definition values", f.name))
 
 			}
 			// PRIMARY KEY and UNIQUE cannot both be true
-			if f.Index.PrimaryKey {
-				if f.Index.Unique {
+			if f.index.PrimaryKey {
+				if f.index.Unique {
 					panic(fmt.Sprintf("[Validation Error] Field '%s' in Table '%s' cannot be both PRIMARY KEY and UNIQUE.", f.name, m.TableName))
 				}
 				// for primry key the types allowed are varchat or int
-				if f.Type != FieldTypes.Int && f.Type != FieldTypes.VarChar {
+				if f.t != FieldTypes.Int && f.t != FieldTypes.VarChar {
 					panic(fmt.Sprintf("[Validation Error] Field '%s' in Table '%s' cannot be both PRIMARY KEY and UNIQUE.", f.name, m.TableName))
 				}
 
@@ -58,20 +58,20 @@ func (m *meta) validate() {
 				primaryKeyCount++
 				mu.Unlock()
 
-				if f.Nullable {
+				if f.nullable {
 					panic(fmt.Sprintf("[Validation Error] Field '%s' in Table '%s' is PRIMARY KEY but marked as nullable.", f.name, m.TableName))
 				}
-				if f.DefaultValue != "" {
+				if f.defaultValue != "" {
 					panic(fmt.Sprintf("[Validation Error] Field '%s' in Table '%s' is PRIMARY KEY but has a default value.", f.name, m.TableName))
 				}
 
 			}
 
-			if f.AutoIncrement {
-				if !f.Index.PrimaryKey {
+			if f.autoIncrement {
+				if !f.index.PrimaryKey {
 					panic(fmt.Sprintf("[Validation Error] Field '%s' in Table '%s' is AUTO_INCREMENT but not PRIMARY KEY.", f.name, m.TableName))
 				}
-				if !strings.HasPrefix(strings.ToLower(f.Type.string()), "int") {
+				if !strings.HasPrefix(strings.ToLower(f.t.string()), "int") {
 					panic(fmt.Sprintf("[Validation Error] Field '%s' in Table '%s' is AUTO_INCREMENT but not of integer type.", f.name, m.TableName))
 				}
 			}
@@ -105,54 +105,54 @@ func (f Field) Validate() {
 		panic(fmt.Sprintf("Field name '%s' is a reserved SQL keyword", f.name))
 	}
 
-	switch f.Type {
+	switch f.t {
 	case FieldTypes.TinyInt:
-		if f.Length < 3 {
+		if f.lenth < 3 {
 			panic(fmt.Sprintf("Field '%s': TINYINT length must be at least 3", f.name))
 		}
 	case FieldTypes.Bool:
-		if f.Length < 0 || f.Length > 1 {
+		if f.lenth < 0 || f.lenth > 1 {
 			panic(fmt.Sprintf("Field '%s': BOOLEAN length must be 1", f.name))
 		}
 	case FieldTypes.SmallInt:
-		if f.Length < 5 {
+		if f.lenth < 5 {
 			panic(fmt.Sprintf("Field '%s': SMALLINT length must be at least 5", f.name))
 		}
 	case FieldTypes.MediumInt:
-		if f.Length < 6 {
+		if f.lenth < 6 {
 			panic(fmt.Sprintf("Field '%s': MEDIUMINT length must be at least 6", f.name))
 		}
 	case FieldTypes.Int, FieldTypes.BigInt:
-		if f.Length < 1 {
-			panic(fmt.Sprintf("Field '%s': %s must have a positive length", f.name, f.Type.string()))
+		if f.lenth < 1 {
+			panic(fmt.Sprintf("Field '%s': %s must have a positive length", f.name, f.t.string()))
 		}
 	case FieldTypes.VarChar, FieldTypes.Char:
-		if f.Length < 1 {
-			panic(fmt.Sprintf("Field '%s': %s must have a positive length", f.name, f.Type.string()))
+		if f.lenth < 1 {
+			panic(fmt.Sprintf("Field '%s': %s must have a positive length", f.name, f.t.string()))
 		}
 	case FieldTypes.Decimal:
-		if f.Length < 1 {
+		if f.lenth < 1 {
 			panic(fmt.Sprintf("Field '%s': DECIMAL must have Length > 0", f.name))
 		}
 	case FieldTypes.Text, FieldTypes.Blob, FieldTypes.JSON, FieldTypes.Date, FieldTypes.Time, FieldTypes.Timestamp:
-		if f.Length > 0 {
-			panic(fmt.Sprintf("Field '%s': Type %s should not have Length", f.name, f.Type.string()))
+		if f.lenth > 0 {
+			panic(fmt.Sprintf("Field '%s': Type %s should not have Length", f.name, f.t.string()))
 		}
 	}
 
-	if f.AutoIncrement && !f.Type.IsNumeric() {
+	if f.autoIncrement && !f.t.IsNumeric() {
 		panic(fmt.Sprintf("Field '%s': AutoIncrement is only allowed on numeric fields", f.name))
 	}
 
-	if f.Index.PrimaryKey && f.Nullable {
+	if f.index.PrimaryKey && f.nullable {
 		panic(fmt.Sprintf("Field '%s': Primary key fields cannot be nullable", f.name))
 	}
 
-	if (f.Index.Unique || f.Index.Index) && (f.Type == FieldTypes.Text || f.Type == FieldTypes.Blob) {
+	if (f.index.Unique || f.index.Index) && (f.t == FieldTypes.Text || f.t == FieldTypes.Blob) {
 		panic(fmt.Sprintf("Field '%s': Cannot use INDEX/UNIQUE on TEXT/BLOB fields", f.name))
 	}
 
-	if f.DefaultValue != "" && !f.Type.IsValueCompatible(f.DefaultValue) {
-		panic(fmt.Sprintf("Field '%s': Default value '%s' is not compatible with type %s", f.name, f.DefaultValue, f.Type.string()))
+	if f.defaultValue != "" && !f.t.IsValueCompatible(f.defaultValue) {
+		panic(fmt.Sprintf("Field '%s': Default value '%s' is not compatible with type %s", f.name, f.defaultValue, f.t.string()))
 	}
 }

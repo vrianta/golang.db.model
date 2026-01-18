@@ -147,11 +147,5 @@ var (
 		"VALUES": true, "VIEW": true, "WHERE": true, "WITH": true,
 	}
 
-	//
-	// jsonStoreMu      sync.RWMutex
 	componentsDir string = "./components"
-	// warnedMissingDir = false
-	// wb               = sync.WaitGroup{}
-
-	initialsed = false
 )

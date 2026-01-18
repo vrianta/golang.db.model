@@ -46,24 +46,16 @@ The package provides automatic database schema synchronization, making it simple
 
 1. **Import the package** in your Go project:
    ```go
-   import "github.com/vrianta/agai/v1/model"
+   import "github.com/vrianta/golang/model"
    ```
 
 2. **Initialize your database connection** before using models:
    ```go
    import (
-       "database/sql"
-       "log"
-       "github.com/vrianta/agai/v1/model"
        _ "github.com/go-sql-driver/mysql"
+       "github.com/vrianta/golang/model"
+       
    )
-   
-   func init() {
-       db, err := sql.Open("mysql", "user:password@tcp(localhost:3306)/dbname")
-       if err != nil {
-           log.Fatal(err)
-       }
-   }
    ```
 
 3. **Define your models** (see section 1 below)
@@ -77,7 +69,7 @@ To use ModelsHandler, define your model as a struct with pointer fields. For exa
 ```go
 package models
 
-import "github.com/vrianta/agai/v1/model"
+import "github.com/vrianta/golang/model"
 
 var Users = model.New(db, "users", struct {
     UserId    *model.Field

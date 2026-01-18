@@ -95,7 +95,7 @@ func (m *meta) SyncComponentWithDB() error {
 
 	// Add missing
 	for k, v := range m.components {
-		if m.primary.Type == FieldTypes.Int {
+		if m.primary.t == FieldTypes.Int {
 			if int_k, err := strconv.Atoi(k); err != nil {
 				return err
 			} else {
