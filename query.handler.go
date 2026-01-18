@@ -357,7 +357,7 @@ func (q *queryBuilder) Limit(n int) *queryBuilder {
 //	columns: column names in the result
 //	results: the list of Structs to return
 func (q *queryBuilder) Fetch() (Results, error) {
-	if err := q.model.Ping(); err != nil {
+	if err := q.model.db.Ping(); err != nil {
 		return nil, err
 	}
 
@@ -375,7 +375,7 @@ func (q *queryBuilder) Fetch() (Results, error) {
 	queryBuilder := fmt.Sprintf("SELECT * FROM %s %s %s %s %s", q.model.TableName, where, group, order, limit)
 
 	// queryBuilder := fmt.Sprintf("SELECT * FROM %s %s %s", q.model.TableName, where, limit)
-	rows, err := q.model.Query(queryBuilder, q.whereArgs...)
+	rows, err := q.model.db.Query(queryBuilder, q.whereArgs...)
 	if err != nil {
 		return nil, err
 	}
@@ -479,7 +479,7 @@ func (q *queryBuilder) First() (Result, error) {
 //	args: all the values to use in the queryBuilder
 //	result: the result of running the update
 func (q *queryBuilder) Exec() error {
-	if err := q.model.Ping(); err != nil {
+	if err := q.model.db.Ping(); err != nil {
 		return err
 	}
 
@@ -503,7 +503,7 @@ func (q *queryBuilder) Exec() error {
 
 		args := append(q.setArgs, q.whereArgs...)
 
-		result, err := q.model.Exec(queryBuilder, args...)
+		result, err := q.model.db.Exec(queryBuilder, args...)
 		if err != nil {
 			fmt.Printf("[Update Error] queryBuilder: %s | Error: %v\n", queryBuilder, err)
 			return err
@@ -535,7 +535,7 @@ func (q *queryBuilder) Exec() error {
 			strings.Join(vals, ", "),
 		)
 
-		result, err := q.model.Exec(queryBuilder, args...)
+		result, err := q.model.db.Exec(queryBuilder, args...)
 		if err != nil {
 			return err
 		}
@@ -554,7 +554,7 @@ func (q *queryBuilder) Exec() error {
 		}
 
 		queryBuilder := fmt.Sprintf("DELETE FROM `%s` %s %s", q.model.TableName, where, limit)
-		result, err := q.model.Exec(queryBuilder, q.whereArgs...)
+		result, err := q.model.db.Exec(queryBuilder, q.whereArgs...)
 		if err != nil {
 			fmt.Printf("[Delete] Errored queryBuilder: %s\n", queryBuilder)
 			return err
@@ -573,7 +573,7 @@ func (q *queryBuilder) Exec() error {
 
 // Exec executes the InsertRow operation.
 func (q *InsertRowBuilder) Exec() error {
-	if err := q.model.Ping(); err != nil {
+	if err := q.model.db.Ping(); err != nil {
 		return err
 	}
 	if len(q.InsertRowFieldTypes) == 0 {
@@ -592,7 +592,7 @@ func (q *InsertRowBuilder) Exec() error {
 		strings.Join(cols, ", "),
 		strings.Join(vals, ", "),
 	)
-	result, err := q.model.Exec(queryBuilder, args...)
+	result, err := q.model.db.Exec(queryBuilder, args...)
 	if err != nil {
 		return err
 	}

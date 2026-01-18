@@ -20,13 +20,14 @@ type (
 
 	meta struct {
 		components
-		*sql.DB
-		TableName   string       // Name of the table in the database
-		FieldTypes  FieldTypeset // Map of field names to their types
-		schemas     []schema
-		initialised bool   // Flag to check if the model is initialised
-		primary     *Field // name of the primary elemet
-		depends_on  []string
+		db            *sql.DB
+		TableName     string       // Name of the table in the database
+		FieldTypes    FieldTypeset // Map of field names to their types
+		schemas       []schema
+		initialised   bool   // Flag to check if the model is initialised
+		initialisedDB bool   // Flag to set if the database is initialised by the user
+		primary       *Field // name of the primary elemet
+		depends_on    []string
 		// indexes     map[string]indexInfo // columnName -> index info
 	}
 )
@@ -60,6 +61,10 @@ func init() {
 
 	model_for_component := maps.Clone(ModelsRegistry)
 	for _, model := range ModelsRegistry {
+
+		if !model.initialisedDB {
+			panic("Database is not initlised in the model")
+		}
 		// Wait until the database driver is initialised
 		// Check if database connection is available, with retry logic
 		maxRetries := 30
@@ -68,9 +73,9 @@ func init() {
 
 		for retryCount < maxRetries {
 			// Check if database connection is available
-			if model.DB != nil {
+			if model.db != nil {
 				// Verify driver is ready by attempting a connection
-				if err := model.Ping(); err == nil {
+				if err := model.db.Ping(); err == nil {
 					break // Driver is ready, proceed with model initialization
 				}
 			}
@@ -85,12 +90,12 @@ func init() {
 		}
 
 		// After all retries, check if driver is ready
-		if model.DB == nil {
+		if model.db == nil {
 			panic(fmt.Sprintf("[Models] Database connection not initialized for model: %s after %d attempts",
 				model.TableName, maxRetries))
 		}
 
-		if err := model.Ping(); err != nil {
+		if err := model.db.Ping(); err != nil {
 			panic(fmt.Sprintf("[Models] Database driver not ready for model %s after %d attempts: %s",
 				model.TableName, maxRetries, err.Error()))
 		}
@@ -129,7 +134,7 @@ func init() {
  * So Dynaimic Table Updation will be handled during development only
  * It will provide the default functions to handle the model like Create, Read, Update, Delete
  */
-func newModel(database *sql.DB, tableName string, FieldTypes FieldTypeset, depends_on []string) meta {
+func newModel(tableName string, FieldTypes FieldTypeset, depends_on []string) meta {
 
 	for _, field := range FieldTypes {
 		if field.fk == nil {
@@ -138,7 +143,6 @@ func newModel(database *sql.DB, tableName string, FieldTypes FieldTypeset, depen
 	}
 
 	_model := meta{
-		DB:         database,
 		components: make(components),
 		TableName:  tableName,
 		FieldTypes: FieldTypes,
@@ -158,11 +162,7 @@ func newModel(database *sql.DB, tableName string, FieldTypes FieldTypeset, depen
 	return _model
 }
 
-func New[T any](database *sql.DB, tableName string, structure T) *Table[T] {
-
-	if err := database.Ping(); err != nil {
-		panic(fmt.Sprintf("Database connection failed: %s for Table: %s", err.Error(), tableName))
-	}
+func New[T any](tableName string, structure T) *Table[T] {
 
 	t := reflect.TypeOf(structure)
 	v := reflect.ValueOf(structure)
@@ -195,12 +195,26 @@ func New[T any](database *sql.DB, tableName string, structure T) *Table[T] {
 	}
 
 	response := &Table[T]{
-		meta:   newModel(database, tableName, FieldTypeset, depends_on),
+		meta:   newModel(tableName, FieldTypeset, depends_on),
 		Fields: structure,
 	}
 
 	ModelsRegistry[tableName] = &response.meta
 	return response
+}
+
+/*
+ * Opens Database Connection and have to be called on creation of the model
+ */
+func (t *Table[T]) InitialiseDB(driver string, DSN string) *Table[T] {
+	var err error
+	if t.meta.db, err = sql.Open(driver, DSN); err != nil {
+		panic("Error opening database: " + err.Error())
+	}
+
+	t.meta.initialisedDB = true
+
+	return t
 }
 
 func (m *meta) CreateTableIfNotExists() {
@@ -221,10 +235,10 @@ func (m *meta) CreateTableIfNotExists() {
 	sql += strings.Join(fieldDefs, ",\n")
 	sql += "\n);"
 
-	if err := m.Ping(); err != nil {
+	if err := m.db.Ping(); err != nil {
 		panic("Database Connection Not Estrablished")
 	}
-	_, err := m.Exec(sql)
+	_, err := m.db.Exec(sql)
 	// log.Info("Creating Table Sql Executed : %s", sql)
 	if err != nil {
 		panic("Error creating table: " + err.Error() + "\nqueryBuilder:" + sql)
@@ -234,14 +248,14 @@ func (m *meta) CreateTableIfNotExists() {
 // Handles adding/dropping PRIMARY KEY
 func (m *meta) syncPrimaryKey(field *Field, schema *schema) {
 
-	if err := m.Ping(); err != nil {
+	if err := m.db.Ping(); err != nil {
 		fmt.Println("Error updating primary key:", err.Error())
 		return
 	}
 	if schema.isprimary && !field.Index.PrimaryKey {
 		// Drop primary key
 		queryBuilder := fmt.Sprintf("ALTER TABLE `%s` DROP PRIMARY KEY;", m.TableName)
-		if _, err := m.Exec(queryBuilder); err != nil {
+		if _, err := m.db.Exec(queryBuilder); err != nil {
 			fmt.Println("[Index] Error dropping PRIMARY KEY:", err)
 		} else {
 			fmt.Printf("[Index] PRIMARY KEY dropped for field: %s\n", field.name)
@@ -250,7 +264,7 @@ func (m *meta) syncPrimaryKey(field *Field, schema *schema) {
 	if !schema.isprimary && field.Index.PrimaryKey {
 		// Add primary key
 		queryBuilder := "ALTER TABLE " + m.TableName + " ADD PRIMARY KEY (" + field.name + ")"
-		if _, err := m.Query(queryBuilder); err != nil {
+		if _, err := m.db.Query(queryBuilder); err != nil {
 			fmt.Println("[ERROR] failed to Add Primary Key ", err.Error())
 			fmt.Println("[FAILED] Failed queryBuilder to Update Primary Key is: ", queryBuilder)
 		}
@@ -266,7 +280,7 @@ func logSection(header string) {
 // Handles adding/dropping UNIQUE index
 func (m *meta) syncUniqueIndex(field *Field, schema *schema) {
 
-	if err := m.Ping(); err != nil {
+	if err := m.db.Ping(); err != nil {
 		fmt.Println("Error updating unique index:", err)
 		return
 	}
@@ -274,7 +288,7 @@ func (m *meta) syncUniqueIndex(field *Field, schema *schema) {
 	if schema.isunique && !field.Index.Unique {
 		// Drop unique index
 		queryBuilder := fmt.Sprintf("ALTER TABLE `%s` DROP INDEX `%s`;", m.TableName, indexName)
-		if _, err := m.Exec(queryBuilder); err != nil {
+		if _, err := m.db.Exec(queryBuilder); err != nil {
 			fmt.Println("[Index] Error dropping UNIQUE:", err)
 		} else {
 			fmt.Printf("[Index] UNIQUE dropped for field: %s\n", field.name)
@@ -283,7 +297,7 @@ func (m *meta) syncUniqueIndex(field *Field, schema *schema) {
 	if !schema.isunique && field.Index.Unique {
 		// Add unique index
 		queryBuilder := fmt.Sprintf("ALTER TABLE `%s` ADD UNIQUE `%s` (`%s`);", m.TableName, indexName, field.name)
-		if _, err := m.Exec(queryBuilder); err != nil {
+		if _, err := m.db.Exec(queryBuilder); err != nil {
 			fmt.Println("[Index] Error adding UNIQUE:", err)
 		} else {
 			fmt.Printf("[Index] UNIQUE added for field: %s\n", field.name)
@@ -293,7 +307,7 @@ func (m *meta) syncUniqueIndex(field *Field, schema *schema) {
 
 // Handles adding/dropping normal INDEX
 func (m *meta) syncIndex(field *Field, schema *schema) {
-	if err := m.Ping(); err != nil {
+	if err := m.db.Ping(); err != nil {
 		fmt.Println("Error updating index:", err)
 		return
 	}
@@ -301,7 +315,7 @@ func (m *meta) syncIndex(field *Field, schema *schema) {
 	if schema.isindex && !field.Index.Index {
 		// Drop index
 		queryBuilder := fmt.Sprintf("ALTER TABLE `%s` DROP INDEX `%s`;", m.TableName, indexName)
-		if _, err := m.Exec(queryBuilder); err != nil {
+		if _, err := m.db.Exec(queryBuilder); err != nil {
 			fmt.Println("[Index] Error dropping INDEX:", err)
 		} else {
 			fmt.Printf("[Index] INDEX dropped for field: %s\n", field.name)
@@ -310,7 +324,7 @@ func (m *meta) syncIndex(field *Field, schema *schema) {
 	if !schema.isindex && field.Index.Index {
 		// Add index
 		queryBuilder := fmt.Sprintf("ALTER TABLE `%s` ADD INDEX `%s` (`%s`);", m.TableName, indexName, field.name)
-		if _, err := m.Exec(queryBuilder); err != nil {
+		if _, err := m.db.Exec(queryBuilder); err != nil {
 			fmt.Println("[Index] Error adding INDEX:", err)
 		} else {
 			fmt.Printf("[Index] INDEX added for field: %s\n", field.name)

@@ -194,7 +194,7 @@ func (m *meta) syncTableSchema() {
 // database availability is guaranteed.
 func (m *meta) syncModelSchema() {
 	// Get the active database connection
-	if err := m.Ping(); err != nil {
+	if err := m.db.Ping(); err != nil {
 		panic("Database not reachable: " + err.Error())
 	}
 
@@ -202,7 +202,7 @@ func (m *meta) syncModelSchema() {
 	checkqueryBuilder := `SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = ?`
 	var count int
 
-	if err := m.QueryRow(checkqueryBuilder, m.TableName).Scan(&count); err != nil {
+	if err := m.db.QueryRow(checkqueryBuilder, m.TableName).Scan(&count); err != nil {
 		panic("Error checking table existence: " + err.Error())
 	}
 	if count == 0 {
@@ -212,7 +212,7 @@ func (m *meta) syncModelSchema() {
 	}
 
 	// Query the structure of the existing table
-	rows, err := m.Query("SHOW COLUMNS FROM `" + m.TableName + "`")
+	rows, err := m.db.Query("SHOW COLUMNS FROM `" + m.TableName + "`")
 	if err != nil {
 		panic("Error getting old table structure: " + err.Error())
 	}
@@ -234,7 +234,7 @@ func (m *meta) syncModelSchema() {
 
 	// Get the current database name
 	var dbName string
-	if err := m.QueryRow("SELECT DATABASE()").Scan(&dbName); err != nil {
+	if err := m.db.QueryRow("SELECT DATABASE()").Scan(&dbName); err != nil {
 		panic("Error getting database name: " + err.Error())
 	}
 
@@ -247,7 +247,7 @@ func (m *meta) syncModelSchema() {
 		}
 
 		// Query the index info for this column
-		if idxRows, err := m.Query(indexqueryBuilder, dbName, m.TableName, _scema.field); err != nil {
+		if idxRows, err := m.db.Query(indexqueryBuilder, dbName, m.TableName, _scema.field); err != nil {
 			panic("Error getting index information: " + err.Error())
 		} else {
 			defer idxRows.Close()
