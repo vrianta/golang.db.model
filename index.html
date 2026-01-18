@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>vrianta/golang</title>
-  <link rel="stylesheet" href="assets/css/styles.css" />
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
 
@@ -15,96 +15,104 @@
     </div>
     <div class="nav-right">
       <a href="#about">About</a>
+      <a href="#docs">Read Docs</a>
       <a href="#tools">Tools</a>
-      <a href="#repos">Current Repos</a>
-      <a href="https://github.com/vrianta" target="_blank">GitHub</a>
+      <a href="https://github.com/vrianta/golang" target="_blank">GitHub</a>
     </div>
   </nav>
 
   <!-- HERO -->
   <section class="hero">
-    <h1>Production-Grade Go Utilities</h1>
+    <h1>Go Tools. Documented by Design.</h1>
     <p>
-      A modular Golang toolkit by <strong>vrianta</strong> —  
-      designed for performance, clarity, and real-world systems.
+      A modular Golang repository where each tool owns its documentation —
+      simple URLs, clear structure, zero friction.
     </p>
 
     <div class="hero-actions">
-      <a href="https://github.com/vrianta/golang" target="_blank" class="btn primary">
-        View Repository
-      </a>
-      <a href="#tools" class="btn secondary">
-        Explore Tools
+      <a href="#docs" class="btn primary">Read Documentation</a>
+      <a href="https://github.com/vrianta/golang" target="_blank" class="btn secondary">
+        View Source
       </a>
     </div>
   </section>
 
   <!-- ABOUT -->
   <section id="about" class="section">
-    <h2>What is this repository?</h2>
+    <h2>Repository Philosophy</h2>
     <p>
-      <strong>vrianta/golang</strong> is a growing collection of
-      <span class="highlight">production-ready Go tools</span> built with
-      simplicity, performance, and extensibility in mind.
+      <strong>vrianta/golang</strong> is designed as a multi-tool Go workspace.
+      Each tool is self-contained, production-focused, and documented at its
+      own directory path.
     </p>
 
     <p>
-      While the repository is structured to support multiple tools,
-      the current focus is a robust <strong>model handler</strong>
-      located under the <code>/model</code> directory.
+      Instead of centralizing documentation into a single monolithic site,
+      each tool exposes its docs directly via:
     </p>
 
+    <pre class="code-block">
+/golang
+/golang/model
+/golang/&lt;tool-name&gt;
+    </pre>
+
     <p>
-      This approach allows the repository to evolve organically —
-      adding independent utilities without coupling or monolithic design.
+      This approach keeps documentation close to code —
+      scalable, intuitive, and developer-first.
     </p>
   </section>
 
+  <!-- DOCS -->
+  <section id="docs" class="section dark">
+    <h2>Read Documentation</h2>
+
+    <div class="docs-grid">
+      <a class="doc-card" href="/golang/model">
+        <h3>Model</h3>
+        <p>
+          Documentation for the model handler —
+          architecture, usage, and integration patterns.
+        </p>
+        <span class="doc-path">/golang/model</span>
+      </a>
+
+      <!-- Future Tools Placeholder (Intentional, Not Empty) -->
+      <div class="doc-card disabled">
+        <h3>Upcoming Tools</h3>
+        <p>
+          Additional Go utilities will appear here as they are added
+          to the repository.
+        </p>
+        <span class="doc-path">/golang/&lt;tool&gt;</span>
+      </div>
+    </div>
+  </section>
+
   <!-- TOOLS -->
-  <section id="tools" class="section dark">
+  <section id="tools" class="section">
     <h2>Current Tooling</h2>
 
     <div class="tool-card">
       <h3>Model Handler</h3>
       <p>
-        A clean abstraction layer for working with models in Go —
-        designed for execution, orchestration, and future extensibility.
+        A production-oriented abstraction for working with models in Go.
+        Built to integrate cleanly into services and pipelines.
       </p>
 
       <ul>
-        <li>✔️ Modular design</li>
-        <li>✔️ Production-oriented structure</li>
-        <li>✔️ Easy integration into services</li>
-        <li>✔️ Designed for future expansion</li>
+        <li>✔️ Directory-based documentation</li>
+        <li>✔️ Clean execution abstraction</li>
+        <li>✔️ Designed for scale</li>
       </ul>
-
-      <span class="path">/model</span>
-    </div>
-  </section>
-
-  <!-- REPOS -->
-  <section id="repos" class="section">
-    <h2>Other Active Repositories</h2>
-
-    <div class="repo-grid">
-      <a class="repo-card" href="https://github.com/vrianta" target="_blank">
-        <h3>vrianta</h3>
-        <p>Main GitHub profile with ongoing projects and experiments.</p>
-      </a>
-
-      <a class="repo-card" href="https://vrianta.in" target="_blank">
-        <h3>vrianta.in</h3>
-        <p>Personal website & philosophy behind the tooling.</p>
-      </a>
     </div>
   </section>
 
   <!-- FOOTER -->
   <footer class="footer">
     <p>
-      Built with Go • Designed by vrianta  
-      <br/>
-      © 2026
+      Docs follow the code.  
+      Built with Go • Designed by vrianta
     </p>
   </footer>
 

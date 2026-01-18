@@ -163,3 +163,39 @@ body {
   color: var(--muted);
   border-top: 1px solid var(--border);
 }
+
+/* DOCS */
+.docs-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 24px;
+}
+
+.doc-card {
+  padding: 32px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  text-decoration: none;
+  color: var(--text);
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.doc-card:hover {
+  border-color: var(--accent);
+  transform: translateY(-4px);
+}
+
+.doc-card p {
+  color: var(--muted);
+  margin: 12px 0;
+}
+
+.doc-path {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.doc-card.disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
