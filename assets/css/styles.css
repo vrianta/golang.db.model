@@ -199,3 +199,11 @@ body {
   opacity: 0.5;
   pointer-events: none;
 }
+
+.tool-actions {
+  margin-top: 24px;
+}
+
+.tool-actions .btn {
+  margin-right: 12px;
+}
