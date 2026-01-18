@@ -3,7 +3,6 @@ package model
 import (
 	"database/sql"
 	"fmt"
-	"maps"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -32,99 +31,119 @@ type (
 	}
 )
 
+var (
+	syncDatabaseEnabled   bool
+	syncComponentsEnabled bool
+)
+
 func init() {
 
-	var SyncDatabaseEnabled bool
-	var SyncComponentsEnabled bool
+	fmt.Println("Model Initialisation Started")
 
 	for _, arg := range os.Args[1:] {
 		switch arg {
 		case "--migrate-model", "-mm":
-			SyncDatabaseEnabled = true
+			syncDatabaseEnabled = true
 		case "--migrate-component", "-mc":
-			SyncComponentsEnabled = true
+			syncComponentsEnabled = true
 		}
 	}
 
+	fmt.Printf("Flags are \nSyncDatabase: %v, \nSyncComponents: %v\n", syncDatabaseEnabled, syncComponentsEnabled)
+
+}
+
+func (t *Table[T]) syncTable() {
+
+	model__ := &t.meta
 	create_model := func(model *meta) {
 		model.CreateTableIfNotExists()
 
-		if SyncDatabaseEnabled {
+		if syncDatabaseEnabled {
 			fmt.Printf("[Models] Initializing model and syncing database tables for: %s", model.TableName)
 			model.syncModelSchema()
 			model.syncTableSchema()
 
 			model.initialised = true
+		} else {
+			fmt.Printf("[Models] Initializing model without syncing database tables for: %s", model.TableName)
+			model.initialised = true
 		}
 		delete(ModelsRegistry, model.TableName)
 	}
 
-	model_for_component := maps.Clone(ModelsRegistry)
-	for _, model := range ModelsRegistry {
-
-		if !model.initialisedDB {
-			panic("Database is not initlised in the model")
-		}
-		// Wait until the database driver is initialised
-		// Check if database connection is available, with retry logic
-		maxRetries := 30
-		retryDelay := 1 // 1 second
-		retryCount := 0
-
-		for retryCount < maxRetries {
-			// Check if database connection is available
-			if model.db != nil {
-				// Verify driver is ready by attempting a connection
-				if err := model.db.Ping(); err == nil {
-					break // Driver is ready, proceed with model initialization
-				}
-			}
-
-			// If we reach here, driver is not ready yet
-			if retryCount < maxRetries-1 {
-				fmt.Printf("[Models] Waiting for driver initialization for model %s (attempt %d/%d)...\n",
-					model.TableName, retryCount+1, maxRetries)
-				time.Sleep(time.Duration(retryDelay) * time.Second)
-			}
-			retryCount++
-		}
-
-		// After all retries, check if driver is ready
-		if model.db == nil {
-			panic(fmt.Sprintf("[Models] Database connection not initialized for model: %s after %d attempts",
-				model.TableName, maxRetries))
-		}
-
-		if err := model.db.Ping(); err != nil {
-			panic(fmt.Sprintf("[Models] Database driver not ready for model %s after %d attempts: %s",
-				model.TableName, maxRetries, err.Error()))
-		}
-
-		// Process model and its dependencies
-		for _, depends_on := range model.depends_on {
-			create_model(ModelsRegistry[depends_on])
-		}
-		create_model(model)
-		delete(ModelsRegistry, model.TableName)
+	if !model__.initialisedDB {
+		panic("Database is not initlised in the model")
 	}
+
+	// Wait until the database driver is initialised
+	// Check if database connection is available, with retry logic
+	maxRetries := 30
+	retryDelay := 1 // 1 second
+	retryCount := 0
+
+	for retryCount < maxRetries {
+		// Check if database connection is available
+		if model__.db != nil {
+			// Verify driver is ready by attempting a connection
+			if err := model__.db.Ping(); err == nil {
+				break // Driver is ready, proceed with model initialization
+			}
+		}
+
+		// If we reach here, driver is not ready yet
+		if retryCount < maxRetries-1 {
+			fmt.Printf("[Models] Waiting for driver initialization for model %s (attempt %d/%d)...\n",
+				model__.TableName, retryCount+1, maxRetries)
+			time.Sleep(time.Duration(retryDelay) * time.Second)
+		}
+		retryCount++
+	}
+
+	// After all retries, check if driver is ready
+	if model__.db == nil {
+		panic(fmt.Sprintf("[Models] Database connection not initialized for model: %s after %d attempts",
+			model__.TableName, maxRetries))
+	}
+
+	if err := model__.db.Ping(); err != nil {
+		panic(fmt.Sprintf("[Models] Database driver not ready for model %s after %d attempts: %s",
+			model__.TableName, maxRetries, err.Error()))
+	}
+
+	// model_for_component := maps.Clone(ModelsRegistry)
+	// fmt.Println("Models Registry: ", ModelsRegistry)
+
+	// for _, model := range ModelsRegistry {
+	// // Process model and its dependencies
+	// WaitForDependsToBeCreated := sync.WaitGroup{}
+	// for _, depends_on := range model.depends_on {
+	// 	for {
+	// 		_, exists := ModelsRegistry[depends_on]
+	// 		if !exists {
+	// 			fmt.Println("Waiting for the depends on model to be executed")
+	// 			continue
+	// 		}
+	// 	}
+	// 	create_model(ModelsRegistry[depends_on])
+	// }
+	create_model(model__)
+	delete(ModelsRegistry, model__.TableName)
+	// }
 
 	fmt.Println("---------------------------------------------------------")
 
-	for _, model := range model_for_component {
-
-		_, err := os.Stat(filepath.Join(componentsDir, model.TableName+".component.json"))
-		if !os.IsNotExist(err) {
-			model.loadComponentFromDisk()
-			if SyncComponentsEnabled {
-				model.SyncComponentWithDB()
-				model.loadComponentFromDisk()
-			} else {
-				// means the file exists in the disk
-				model.refreshComponentFromDB()
-			}
+	_, err := os.Stat(filepath.Join(componentsDir, model__.TableName+".component.json"))
+	if !os.IsNotExist(err) {
+		model__.loadComponentFromDisk()
+		if syncComponentsEnabled {
+			model__.SyncComponentWithDB()
+			model__.loadComponentFromDisk()
+		} else {
+			// means the file exists in the disk
+			model__.refreshComponentFromDB()
 		}
 	}
-	initialsed = true
 }
 
 /*
@@ -214,6 +233,8 @@ func (t *Table[T]) InitialiseDB(driver string, DSN string) *Table[T] {
 
 	t.meta.initialisedDB = true
 
+	t.syncTable()
+
 	return t
 }
 
@@ -239,9 +260,11 @@ func (m *meta) CreateTableIfNotExists() {
 		panic("Database Connection Not Estrablished")
 	}
 	_, err := m.db.Exec(sql)
-	// log.Info("Creating Table Sql Executed : %s", sql)
+	// fmt.Printf("Creating Table Sql Executed : %s", sql)
 	if err != nil {
 		panic("Error creating table: " + err.Error() + "\nqueryBuilder:" + sql)
+	} else {
+		fmt.Printf("[Models] Table '%s' ensured to exist.\n", m.TableName)
 	}
 }
 
