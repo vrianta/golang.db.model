@@ -3,7 +3,26 @@
 
 <head>
     <meta charset="UTF-8" />
-    <title>Schema Synchronization – ModelsHandler</title>
+    <title>Schema Synchronization - ModelsHandler</title>
+    <meta name="description"
+        content="Learn how schema synchronization works in ModelsHandler. Automatically sync Go models with your database, manage migrations, and control schema updates safely.">
+    <meta name="keywords"
+        content="Go schema migration, Golang ORM migration, ModelsHandler schema sync, Go auto migration, database schema Go">
+    <meta name="author" content="ModelsHandler">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://vrianta.in/golang/model/schema/">
+    <meta property="og:title" content="Schema Synchronization - ModelsHandler">
+    <meta property="og:description"
+        content="Understand how ModelsHandler synchronizes database schemas from Go models with safe, controlled migrations.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://vrianta.in/golang/model/schema/">
+    <meta property="og:image" content="https://vrianta.in/assets/img/og-modelshandler.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Schema Synchronization - ModelsHandler">
+    <meta name="twitter:description"
+        content="Auto-sync database schemas from Go models using ModelsHandler with controlled migration flags.">
+    <meta name="twitter:image" content="https://vrianta.in/assets/img/og-modelshandler.png">
+
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 
     <!-- Bootstrap -->
@@ -19,155 +38,155 @@
 
 <body data-section="schema">
 
-<!-- HEADER -->
-<nav class="navbar navbar-expand-lg fixed-top">
-    <div class="container">
-        <a class="navbar-brand" href="../index.html">ModelsHandler</a>
-        <button class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#docsNav">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div id="docsNav" class="collapse navbar-collapse">
-            <ul class="navbar-nav ms-auto" id="dynamic-top-nav"></ul>
+    <!-- HEADER -->
+    <nav class="navbar navbar-expand-lg fixed-top">
+        <div class="container">
+            <a class="navbar-brand" href="../index.html">ModelsHandler</a>
+            <button class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#docsNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div id="docsNav" class="collapse navbar-collapse">
+                <ul class="navbar-nav ms-auto" id="dynamic-top-nav"></ul>
+            </div>
         </div>
-    </div>
-</nav>
+    </nav>
 
-<!-- PAGE -->
-<div class="container-fluid">
-    <div class="row">
+    <!-- PAGE -->
+    <div class="container-fluid">
+        <div class="row">
 
-        <!-- SIDEBAR -->
-        <aside class="col-lg-3 col-xl-2 d-none d-lg-block docs-sidebar">
-            <nav id="dynamic-sidebar"></nav>
-        </aside>
+            <!-- SIDEBAR -->
+            <aside class="col-lg-3 col-xl-2 d-none d-lg-block docs-sidebar">
+                <nav id="dynamic-sidebar"></nav>
+            </aside>
 
-        <!-- CONTENT -->
-        <main class="col-lg-9 col-xl-10 docs-content">
-            <article class="docs-article">
+            <!-- CONTENT -->
+            <main class="col-lg-9 col-xl-10 docs-content">
+                <article class="docs-article">
 
-                <!-- INTRO -->
-                <section id="schema-sync">
-                    <h2>Schema Synchronization</h2>
-                    <p>
-                        ModelsHandler keeps your database schema in sync with
-                        your Go model definitions.
-                    </p>
+                    <!-- INTRO -->
+                    <section id="schema-sync">
+                        <h2>Schema Synchronization</h2>
+                        <p>
+                            ModelsHandler keeps your database schema in sync with
+                            your Go model definitions.
+                        </p>
 
-                    <p>
-                        When schema synchronization is enabled, the system
-                        compares your model definitions against the existing
-                        database structure and applies necessary changes.
-                    </p>
+                        <p>
+                            When schema synchronization is enabled, the system
+                            compares your model definitions against the existing
+                            database structure and applies necessary changes.
+                        </p>
 
-                    <p>
-                        This allows you to evolve your database schema
-                        alongside your code without maintaining manual
-                        migration scripts during development.
-                    </p>
-                </section>
+                        <p>
+                            This allows you to evolve your database schema
+                            alongside your code without maintaining manual
+                            migration scripts during development.
+                        </p>
+                    </section>
 
-                <!-- AUTO MIGRATION -->
-                <section id="auto-migration">
-                    <h2>Auto Migration</h2>
-                    <p>
-                        Auto migration is an opt-in process that updates the
-                        database schema based on your model definitions.
-                    </p>
+                    <!-- AUTO MIGRATION -->
+                    <section id="auto-migration">
+                        <h2>Auto Migration</h2>
+                        <p>
+                            Auto migration is an opt-in process that updates the
+                            database schema based on your model definitions.
+                        </p>
 
-                    <p>
-                        When enabled, ModelsHandler can:
-                    </p>
+                        <p>
+                            When enabled, ModelsHandler can:
+                        </p>
 
-                    <ul>
-                        <li>Create tables that do not exist</li>
-                        <li>Add new columns defined in models</li>
-                        <li>Update column types and constraints</li>
-                        <li>Synchronize indexes and keys</li>
-                    </ul>
+                        <ul>
+                            <li>Create tables that do not exist</li>
+                            <li>Add new columns defined in models</li>
+                            <li>Update column types and constraints</li>
+                            <li>Synchronize indexes and keys</li>
+                        </ul>
 
-                    <p>
-                        Auto migration runs only when explicitly requested
-                        and is never performed silently in production.
-                    </p>
-                </section>
+                        <p>
+                            Auto migration runs only when explicitly requested
+                            and is never performed silently in production.
+                        </p>
+                    </section>
 
-                <!-- FLAGS -->
-                <section id="migration-flags">
-                    <h2>Migration Flags</h2>
-                    <p>
-                        Schema synchronization is triggered using a command-line
-                        flag when running your application.
-                    </p>
+                    <!-- FLAGS -->
+                    <section id="migration-flags">
+                        <h2>Migration Flags</h2>
+                        <p>
+                            Schema synchronization is triggered using a command-line
+                            flag when running your application.
+                        </p>
 
-                    <h3><code>--migrate-model</code></h3>
-                    <p>
-                        Runs schema synchronization for all defined models.
-                    </p>
+                        <h3><code>--migrate-model</code></h3>
+                        <p>
+                            Runs schema synchronization for all defined models.
+                        </p>
 
-                    <pre><code class="language-bash">
+                        <pre><code class="language-bash">
 go run . --migrate-model
                     </code></pre>
 
-                    <h3><code>-mm</code></h3>
-                    <p>
-                        Shorthand alias for <code>--migrate-model</code>.
-                    </p>
+                        <h3><code>-mm</code></h3>
+                        <p>
+                            Shorthand alias for <code>--migrate-model</code>.
+                        </p>
 
-                    <pre><code class="language-bash">
+                        <pre><code class="language-bash">
 go run . -mm
                     </code></pre>
 
-                    <p>
-                        Without these flags, no schema changes are applied.
-                    </p>
-                </section>
+                        <p>
+                            Without these flags, no schema changes are applied.
+                        </p>
+                    </section>
 
-                <!-- ENV -->
-                <section id="environment-guidelines">
-                    <h2>Environment Guidelines</h2>
-                    <p>
-                        Auto migration is intended primarily for development
-                        and controlled environments.
-                    </p>
+                    <!-- ENV -->
+                    <section id="environment-guidelines">
+                        <h2>Environment Guidelines</h2>
+                        <p>
+                            Auto migration is intended primarily for development
+                            and controlled environments.
+                        </p>
 
-                    <ul>
-                        <li>
-                            <strong>Development:</strong> Use migration flags
-                            to evolve schema rapidly while iterating on models.
-                        </li>
-                        <li>
-                            <strong>Staging:</strong> Review schema changes
-                            before applying them.
-                        </li>
-                        <li>
-                            <strong>Production:</strong> Disable auto migration
-                            and apply changes deliberately.
-                        </li>
-                    </ul>
+                        <ul>
+                            <li>
+                                <strong>Development:</strong> Use migration flags
+                                to evolve schema rapidly while iterating on models.
+                            </li>
+                            <li>
+                                <strong>Staging:</strong> Review schema changes
+                                before applying them.
+                            </li>
+                            <li>
+                                <strong>Production:</strong> Disable auto migration
+                                and apply changes deliberately.
+                            </li>
+                        </ul>
 
-                    <p>
-                        Always review schema changes before applying them to
-                        production databases.
-                    </p>
-                </section>
+                        <p>
+                            Always review schema changes before applying them to
+                            production databases.
+                        </p>
+                    </section>
 
-                <!-- NEXT -->
-                <section>
-                    <h2>Next Steps</h2>
-                    <ul>
-                        <li><a href="../components/">Components</a></li>
-                        <li><a href="../best-practices/">Best Practices</a></li>
-                    </ul>
-                </section>
+                    <!-- NEXT -->
+                    <section>
+                        <h2>Next Steps</h2>
+                        <ul>
+                            <li><a href="../components/">Components</a></li>
+                            <li><a href="../best-practices/">Best Practices</a></li>
+                        </ul>
+                    </section>
 
-            </article>
-        </main>
+                </article>
+            </main>
 
+        </div>
     </div>
-</div>
 
-<script src="../assets/js/Bootstrap/bootstrap.bundle.min.js"></script>
-<script src="../assets/js/navigations.js"></script>
+    <script src="../assets/js/Bootstrap/bootstrap.bundle.min.js"></script>
+    <script src="../assets/js/navigations.js"></script>
 </body>
 
 </html>

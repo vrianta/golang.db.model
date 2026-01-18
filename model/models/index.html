@@ -5,6 +5,25 @@
     <meta charset="UTF-8" />
     <title>Models & Fields – ModelsHandler</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description"
+        content="Learn how to define models and fields in ModelsHandler, a Go ORM-like query builder. Understand model structure, field types, and constraints in Go.">
+    <meta name="keywords"
+        content="Go ORM models, Golang model definition, Go database fields, ModelsHandler models, Go ORM fields">
+    <meta name="author" content="ModelsHandler">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://vrianta.in/golang/model/models/">
+    <meta property="og:title" content="Models & Fields – ModelsHandler">
+    <meta property="og:description"
+        content="Define database models and fields in Go using ModelsHandler’s clean, type-safe ORM-style API.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://vrianta.in/golang/model/models/">
+    <meta property="og:image" content="https://vrianta.in/assets/img/og-modelshandler.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Models & Fields – ModelsHandler">
+    <meta name="twitter:description"
+        content="Learn how to define models, fields, and constraints using ModelsHandler for Go.">
+    <meta name="twitter:image" content="https://vrianta.in/assets/img/og-modelshandler.png">
+
 
     <!-- Bootstrap -->
     <link href="../assets/css/Bootstrap/bootstrap.min.css" rel="stylesheet">
@@ -19,47 +38,47 @@
 
 <body data-section="models">
 
-<!-- HEADER -->
-<nav class="navbar navbar-expand-lg fixed-top">
-    <div class="container">
-        <a class="navbar-brand" href="../index.html">ModelsHandler</a>
-        <button class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#docsNav">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div id="docsNav" class="collapse navbar-collapse">
-            <ul class="navbar-nav ms-auto" id="dynamic-top-nav"></ul>
+    <!-- HEADER -->
+    <nav class="navbar navbar-expand-lg fixed-top">
+        <div class="container">
+            <a class="navbar-brand" href="../index.html">ModelsHandler</a>
+            <button class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#docsNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div id="docsNav" class="collapse navbar-collapse">
+                <ul class="navbar-nav ms-auto" id="dynamic-top-nav"></ul>
+            </div>
         </div>
-    </div>
-</nav>
+    </nav>
 
-<!-- PAGE -->
-<div class="container-fluid">
-    <div class="row">
+    <!-- PAGE -->
+    <div class="container-fluid">
+        <div class="row">
 
-        <!-- SIDEBAR -->
-        <aside class="col-lg-3 col-xl-2 d-none d-lg-block docs-sidebar">
-            <nav id="dynamic-sidebar"></nav>
-        </aside>
+            <!-- SIDEBAR -->
+            <aside class="col-lg-3 col-xl-2 d-none d-lg-block docs-sidebar">
+                <nav id="dynamic-sidebar"></nav>
+            </aside>
 
-        <!-- CONTENT -->
-        <main class="col-lg-9 col-xl-10 docs-content">
-            <article class="docs-article">
+            <!-- CONTENT -->
+            <main class="col-lg-9 col-xl-10 docs-content">
+                <article class="docs-article">
 
-                <section id="defining-model">
-                    <h2>Defining a Model</h2>
-                    <p>
-                        In ModelsHandler, a model represents a database table.
-                        Models are defined using Go structs where each field
-                        corresponds to a database column.
-                    </p>
+                    <section id="defining-model">
+                        <h2>Defining a Model</h2>
+                        <p>
+                            In ModelsHandler, a model represents a database table.
+                            Models are defined using Go structs where each field
+                            corresponds to a database column.
+                        </p>
 
-                    <p>
-                        A model is created using <code>model.New</code> and a
-                        struct containing pointer fields to <code>model.Field</code>.
-                        The database connection is provided when initializing the model.
-                    </p>
+                        <p>
+                            A model is created using <code>model.New</code> and a
+                            struct containing pointer fields to <code>model.Field</code>.
+                            The database connection is provided when initializing the model.
+                        </p>
 
-                    <pre><code class="language-go">
+                        <pre><code class="language-go">
 // db is a standard *sql.DB instance
 var Users = model.New("users", struct {
     UserId   *model.Field
@@ -82,17 +101,17 @@ var Users = model.New("users", struct {
     Password: model.CreateField().AsText().NotNull(),
 }).initializeDB("driver", DSN) // driver: "mysql", "postgres", etc. DSN: Data Source Name
                     </code></pre>
-                </section>
+                    </section>
 
-                <section id="field-types">
-                    <h2>Field Types</h2>
-                    <p>
-                        Field types define how data is stored in the database.
-                        ModelsHandler provides a fluent API for defining
-                        common SQL types.
-                    </p>
+                    <section id="field-types">
+                        <h2>Field Types</h2>
+                        <p>
+                            Field types define how data is stored in the database.
+                            ModelsHandler provides a fluent API for defining
+                            common SQL types.
+                        </p>
 
-                    <pre><code class="language-go">
+                        <pre><code class="language-go">
 // String types
 model.CreateField().AsVarchar(255)
 model.CreateField().AsText()
@@ -105,61 +124,61 @@ model.CreateField().AsBigInt()
 model.CreateField().AsBool()
 model.CreateField().AsJSON()
                     </code></pre>
-                </section>
+                    </section>
 
-                <section id="field-modifiers">
-                    <h2>Field Modifiers</h2>
-                    <p>
-                        Modifiers add constraints and behavior to fields.
-                        They can be chained after defining a field type.
-                    </p>
+                    <section id="field-modifiers">
+                        <h2>Field Modifiers</h2>
+                        <p>
+                            Modifiers add constraints and behavior to fields.
+                            They can be chained after defining a field type.
+                        </p>
 
-                    <pre><code class="language-go">
+                        <pre><code class="language-go">
 model.CreateField().
     AsVarchar(100).
     NotNull().
     IsUnique().
     Default("guest")
                     </code></pre>
-                </section>
+                    </section>
 
-                <section id="accessing-fields">
-                    <h2>Accessing Fields</h2>
-                    <p>
-                        After defining a model, all fields are accessible
-                        through the <code>.Fields</code> property.
-                    </p>
+                    <section id="accessing-fields">
+                        <h2>Accessing Fields</h2>
+                        <p>
+                            After defining a model, all fields are accessible
+                            through the <code>.Fields</code> property.
+                        </p>
 
-                    <pre><code class="language-go">
+                        <pre><code class="language-go">
 Users.Fields.UserId
 Users.Fields.UserName
 Users.Fields.Password
                     </code></pre>
 
-                    <p>
-                        These field references are used throughout the
-                        query builder to ensure type-safe queries.
-                    </p>
-                </section>
+                        <p>
+                            These field references are used throughout the
+                            query builder to ensure type-safe queries.
+                        </p>
+                    </section>
 
-                <section>
-                    <h2>Next Steps</h2>
-                    <p>From here, continue with:</p>
-                    <ul>
-                        <li><a href="../fields/">Field Creation</a></li>
-                        <li><a href="../queries/">Building Queries</a></li>
-                        <li><a href="../schema/">Schema Synchronization</a></li>
-                    </ul>
-                </section>
+                    <section>
+                        <h2>Next Steps</h2>
+                        <p>From here, continue with:</p>
+                        <ul>
+                            <li><a href="../fields/">Field Creation</a></li>
+                            <li><a href="../queries/">Building Queries</a></li>
+                            <li><a href="../schema/">Schema Synchronization</a></li>
+                        </ul>
+                    </section>
 
-            </article>
-        </main>
+                </article>
+            </main>
 
+        </div>
     </div>
-</div>
 
-<script src="../assets/js/Bootstrap/bootstrap.bundle.min.js"></script>
-<script src="../assets/js/navigations.js"></script>
+    <script src="../assets/js/Bootstrap/bootstrap.bundle.min.js"></script>
+    <script src="../assets/js/navigations.js"></script>
 </body>
 
 </html>

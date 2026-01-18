@@ -3,7 +3,26 @@
 
 <head>
     <meta charset="UTF-8" />
-    <title>Best Practices – ModelsHandler</title>
+    <title>Best Practices - ModelsHandler</title>
+    <meta name="description"
+        content="Best practices for using ModelsHandler effectively. Learn recommended patterns for models, fields, queries, schema migrations, and components in Go.">
+    <meta name="keywords"
+        content="Go ORM best practices, ModelsHandler best practices, Golang database design, Go schema migration tips, Go ORM performance">
+    <meta name="author" content="ModelsHandler">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://vrianta.in/golang/model/best-practices/">
+    <meta property="og:title" content="Best Practices - ModelsHandler">
+    <meta property="og:description"
+        content="Recommended best practices for building safe, maintainable applications using ModelsHandler and Go.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://vrianta.in/golang/model/best-practices/">
+    <meta property="og:image" content="https://vrianta.in/assets/img/og-modelshandler.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Best Practices - ModelsHandler">
+    <meta name="twitter:description"
+        content="Learn best practices for models, queries, schema migrations, and components in ModelsHandler.">
+    <meta name="twitter:image" content="https://vrianta.in/assets/img/og-modelshandler.png">
+
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 
     <!-- Bootstrap -->
@@ -19,132 +38,132 @@
 
 <body data-section="best-practices">
 
-<!-- HEADER -->
-<nav class="navbar navbar-expand-lg fixed-top">
-    <div class="container">
-        <a class="navbar-brand" href="../index.html">ModelsHandler</a>
-        <button class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#docsNav">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div id="docsNav" class="collapse navbar-collapse">
-            <ul class="navbar-nav ms-auto" id="dynamic-top-nav"></ul>
+    <!-- HEADER -->
+    <nav class="navbar navbar-expand-lg fixed-top">
+        <div class="container">
+            <a class="navbar-brand" href="../index.html">ModelsHandler</a>
+            <button class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#docsNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div id="docsNav" class="collapse navbar-collapse">
+                <ul class="navbar-nav ms-auto" id="dynamic-top-nav"></ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- PAGE -->
+    <div class="container-fluid">
+        <div class="row">
+
+            <!-- SIDEBAR -->
+            <aside class="col-lg-3 col-xl-2 d-none d-lg-block docs-sidebar">
+                <nav id="dynamic-sidebar"></nav>
+            </aside>
+
+            <!-- CONTENT -->
+            <main class="col-lg-9 col-xl-10 docs-content">
+                <article class="docs-article">
+
+                    <!-- GENERAL -->
+                    <section id="general-principles">
+                        <h2>General Principles</h2>
+                        <ul>
+                            <li>Prefer explicit definitions over hidden magic</li>
+                            <li>Keep structure (models) separate from behavior (queries)</li>
+                            <li>Use migrations deliberately, never accidentally</li>
+                            <li>Review changes before applying them to production</li>
+                        </ul>
+                    </section>
+
+                    <!-- MODELS -->
+                    <section id="models">
+                        <h2>Models</h2>
+                        <ul>
+                            <li>Define one model per table</li>
+                            <li>Always define a primary key</li>
+                            <li>Keep models focused on structure only</li>
+                            <li>Avoid embedding query logic inside model definitions</li>
+                            <li>Bind database connections explicitly using <code>WithDB</code></li>
+                        </ul>
+                    </section>
+
+                    <!-- FIELDS -->
+                    <section id="fields">
+                        <h2>Fields</h2>
+                        <ul>
+                            <li>Use the most specific field type available</li>
+                            <li>Explicitly mark required fields using <code>NotNull()</code></li>
+                            <li>Use <code>IsUnique()</code> and <code>IsIndex()</code> intentionally</li>
+                            <li>Prefer database defaults over application-side defaults</li>
+                            <li>Avoid overusing large text or blob fields</li>
+                        </ul>
+                    </section>
+
+                    <!-- QUERIES -->
+                    <section id="queries">
+                        <h2>Queries</h2>
+                        <ul>
+                            <li>Always use field references instead of raw column names</li>
+                            <li>Use <code>First()</code> when expecting a single row</li>
+                            <li>Paginate large result sets using <code>Limit</code> or <code>Page</code></li>
+                            <li>Check errors after every database operation</li>
+                            <li>Avoid loading entire tables into memory</li>
+                        </ul>
+                    </section>
+
+                    <!-- SCHEMA -->
+                    <section id="schema">
+                        <h2>Schema Migration</h2>
+                        <ul>
+                            <li>Use <code>--migrate-model</code> only when schema changes are expected</li>
+                            <li>Run schema migration in development, not automatically in production</li>
+                            <li>Review schema changes before deploying</li>
+                            <li>Keep schema changes small and incremental</li>
+                        </ul>
+                    </section>
+
+                    <!-- COMPONENTS -->
+                    <section id="components">
+                        <h2>Components</h2>
+                        <ul>
+                            <li>Use components for authoritative, low-churn datasets</li>
+                            <li>Always define a primary key for component-backed models</li>
+                            <li>Review component sync behavior before using in production</li>
+                            <li>Use <code>--migrate-component</code> intentionally</li>
+                            <li>Avoid using components for transactional or user-generated data</li>
+                        </ul>
+                    </section>
+
+                    <!-- ENV -->
+                    <section id="environments">
+                        <h2>Environment Strategy</h2>
+                        <ul>
+                            <li><strong>Development:</strong> Use <code>-mm</code> and <code>-mc</code> freely</li>
+                            <li><strong>Staging:</strong> Validate migrations against real data</li>
+                            <li><strong>Production:</strong> Disable automatic migrations</li>
+                            <li>Always back up production databases before changes</li>
+                            <li>Log and monitor migration output</li>
+                        </ul>
+                    </section>
+
+                    <!-- NEXT -->
+                    <section>
+                        <h2>Final Notes</h2>
+                        <p>
+                            ModelsHandler is designed to give you control.
+                            Used correctly, it enables rapid development without
+                            sacrificing clarity or safety.
+                        </p>
+                    </section>
+
+                </article>
+            </main>
+
         </div>
     </div>
-</nav>
 
-<!-- PAGE -->
-<div class="container-fluid">
-    <div class="row">
-
-        <!-- SIDEBAR -->
-        <aside class="col-lg-3 col-xl-2 d-none d-lg-block docs-sidebar">
-            <nav id="dynamic-sidebar"></nav>
-        </aside>
-
-        <!-- CONTENT -->
-        <main class="col-lg-9 col-xl-10 docs-content">
-            <article class="docs-article">
-
-                <!-- GENERAL -->
-                <section id="general-principles">
-                    <h2>General Principles</h2>
-                    <ul>
-                        <li>Prefer explicit definitions over hidden magic</li>
-                        <li>Keep structure (models) separate from behavior (queries)</li>
-                        <li>Use migrations deliberately, never accidentally</li>
-                        <li>Review changes before applying them to production</li>
-                    </ul>
-                </section>
-
-                <!-- MODELS -->
-                <section id="models">
-                    <h2>Models</h2>
-                    <ul>
-                        <li>Define one model per table</li>
-                        <li>Always define a primary key</li>
-                        <li>Keep models focused on structure only</li>
-                        <li>Avoid embedding query logic inside model definitions</li>
-                        <li>Bind database connections explicitly using <code>WithDB</code></li>
-                    </ul>
-                </section>
-
-                <!-- FIELDS -->
-                <section id="fields">
-                    <h2>Fields</h2>
-                    <ul>
-                        <li>Use the most specific field type available</li>
-                        <li>Explicitly mark required fields using <code>NotNull()</code></li>
-                        <li>Use <code>IsUnique()</code> and <code>IsIndex()</code> intentionally</li>
-                        <li>Prefer database defaults over application-side defaults</li>
-                        <li>Avoid overusing large text or blob fields</li>
-                    </ul>
-                </section>
-
-                <!-- QUERIES -->
-                <section id="queries">
-                    <h2>Queries</h2>
-                    <ul>
-                        <li>Always use field references instead of raw column names</li>
-                        <li>Use <code>First()</code> when expecting a single row</li>
-                        <li>Paginate large result sets using <code>Limit</code> or <code>Page</code></li>
-                        <li>Check errors after every database operation</li>
-                        <li>Avoid loading entire tables into memory</li>
-                    </ul>
-                </section>
-
-                <!-- SCHEMA -->
-                <section id="schema">
-                    <h2>Schema Migration</h2>
-                    <ul>
-                        <li>Use <code>--migrate-model</code> only when schema changes are expected</li>
-                        <li>Run schema migration in development, not automatically in production</li>
-                        <li>Review schema changes before deploying</li>
-                        <li>Keep schema changes small and incremental</li>
-                    </ul>
-                </section>
-
-                <!-- COMPONENTS -->
-                <section id="components">
-                    <h2>Components</h2>
-                    <ul>
-                        <li>Use components for authoritative, low-churn datasets</li>
-                        <li>Always define a primary key for component-backed models</li>
-                        <li>Review component sync behavior before using in production</li>
-                        <li>Use <code>--migrate-component</code> intentionally</li>
-                        <li>Avoid using components for transactional or user-generated data</li>
-                    </ul>
-                </section>
-
-                <!-- ENV -->
-                <section id="environments">
-                    <h2>Environment Strategy</h2>
-                    <ul>
-                        <li><strong>Development:</strong> Use <code>-mm</code> and <code>-mc</code> freely</li>
-                        <li><strong>Staging:</strong> Validate migrations against real data</li>
-                        <li><strong>Production:</strong> Disable automatic migrations</li>
-                        <li>Always back up production databases before changes</li>
-                        <li>Log and monitor migration output</li>
-                    </ul>
-                </section>
-
-                <!-- NEXT -->
-                <section>
-                    <h2>Final Notes</h2>
-                    <p>
-                        ModelsHandler is designed to give you control.
-                        Used correctly, it enables rapid development without
-                        sacrificing clarity or safety.
-                    </p>
-                </section>
-
-            </article>
-        </main>
-
-    </div>
-</div>
-
-<script src="../assets/js/Bootstrap/bootstrap.bundle.min.js"></script>
-<script src="../assets/js/navigations.js"></script>
+    <script src="../assets/js/Bootstrap/bootstrap.bundle.min.js"></script>
+    <script src="../assets/js/navigations.js"></script>
 </body>
 
 </html>
