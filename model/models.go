@@ -64,7 +64,9 @@ func init() {
 func newModel(tableName string, FieldTypes fieldTypeset, depends_on []string) meta {
 
 	for _, field := range FieldTypes {
-		// if field.fk == nil {
+		if field.fk != nil {
+			depends_on = append(depends_on, field.fk.referenceTable)
+		}
 		field.table_name = tableName // Set the table name for each field
 		// }
 	}
